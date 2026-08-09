@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginResponse } from '../types';
+import type { User, LoginResponse } from '../types';
 import { signalRService } from '../services/signalrService';
 
 interface AuthContextType {

@@ -9,6 +9,7 @@
 *.sln.docstates
 
 # Node & Frontend
+frontend/
 **/node_modules/
 **/dist/
 **/build/

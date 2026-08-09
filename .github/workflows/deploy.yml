@@ -1,4 +1,4 @@
-name: CI/CD Deployment Pipeline
+name: CI/CD Backend Deployment Pipeline
 
 on:
   push:
@@ -19,22 +19,11 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
-    - name: Restore and Build Backend
+    - name: Restore and Build Backend Web API
       run: |
         cd backend
         dotnet restore
         dotnet build --no-restore -c Release
-
-    - name: Setup Node.js Environment
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-
-    - name: Install and Build Frontend
-      run: |
-        cd frontend
-        npm ci
-        npm run build
 
     - name: Verify Docker Compose Build
       run: |

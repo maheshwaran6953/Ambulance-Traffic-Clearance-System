@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+      - VITE_SIGNALR_URL=http://localhost:5000/hubs/notifications
+      - VITE_DEMO_MODE=false
+    restart: always
+

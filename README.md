@@ -26,21 +26,6 @@ graph TD
 
 ---
 
-## 🛠️ Tech Stack
-
-| Component | Technology |
-| :--- | :--- |
-| **Framework** | ASP.NET Core 10 Web API |
-| **Database** | PostgreSQL 16 (`Npgsql.EntityFrameworkCore.PostgreSQL`) |
-| **ORM** | Entity Framework Core (EF Core) |
-| **Real-Time Engine** | ASP.NET Core SignalR (WebSockets) |
-| **Authentication** | JWT (JSON Web Tokens) with Role Claims (`Ambulance`, `Police`, `Admin`) |
-| **API Documentation** | Swagger / OpenAPI v3 (`http://localhost:5000/swagger`) |
-| **Containerization** | Docker, Docker Compose |
-| **CI/CD** | GitHub Actions Pipeline |
-
----
-
 ## 👥 Seed Account Credentials
 
 | Role | Username | Password | Linked Entity / Signal Location |
@@ -92,28 +77,129 @@ docker compose up --build -d
 
 ---
 
-## 📑 Complete API Endpoints & SignalR Events
+## 🧪 Complete Step-by-Step Swagger Testing Guide (`http://localhost:5000/swagger`)
 
-### 🔑 Authentication
-- `POST /api/auth/login`: Accepts `{ username, password }`, returns JWT Bearer token and user profile details.
+### Step 1: Login as Ambulance Driver & Copy JWT Token
+1. Open **[http://localhost:5000/swagger](http://localhost:5000/swagger)**.
+2. Expand **`POST /api/auth/login`** and click **Try it out**.
+3. Paste the following JSON request body:
+   ```json
+   {
+     "username": "ambulance1",
+     "password": "Password123!"
+   }
+   ```
+4. Click **Execute**.
+5. Copy the `"token"` string value from the Response Body (without quotes).
+6. Scroll to the top right of the Swagger UI, click **Authorize** 🔓, type `Bearer YOUR_COPIED_TOKEN`, and click **Authorize**.
 
-### 🚑 Ambulance Endpoints (`Authorize: Roles = Ambulance, Admin`)
-- `GET /api/ambulance/routes`: Get predefined route options.
-- `POST /api/ambulance/trips`: Start emergency trip `{ fromLocation, toLocation }`.
-- `GET /api/ambulance/trips/active`: Get active trips for logged-in ambulance crew.
-- `GET /api/ambulance/trips/{id}`: Get detailed trip progress and signal timeline.
-- `PUT /api/ambulance/trips/{id}/cancel`: Cancel active trip.
+---
 
-### 👮 Police Endpoints (`Authorize: Roles = Police, Admin`)
-- `GET /api/police/notifications`: Get signal clearance notifications for logged-in officer.
-- `PUT /api/police/notifications/{id}/status`: Update status `{ status: "Cleared" | "Passed" }`.
+### Step 2: Test Ambulance Endpoints (`/api/ambulance`)
 
-### 🛡️ Admin Endpoints (`Authorize: Roles = Admin`)
-- `GET /api/admin/statistics`: Get overall corridor metrics.
-- `GET /api/admin/officers`: Get monitored police officer signal station matrix.
+#### 1. `GET /api/ambulance/routes`
+- Click **Try it out** ➔ **Execute**.
+- **Expected Result**: Returns pre-mapped emergency route options (e.g., `From: Central Hospital` to `To: City Civil Hospital`).
 
-### ⚡ SignalR Real-Time WebSockets (`/notificationHub`)
-- **Incoming Events**:
-  - `ReceiveEmergencyNotification`: Triggered when an ambulance starts a trip along officer's signal location.
-  - `NotificationStatusUpdated`: Triggered when an officer marks signal as `Cleared` or `Passed`.
-  - `TripCancelled`: Triggered when an ambulance driver cancels a trip.
+#### 2. `POST /api/ambulance/trips` (Start Emergency Trip)
+- Click **Try it out**.
+- Paste request body:
+  ```json
+  {
+    "fromLocation": "Central Hospital",
+    "toLocation": "City Civil Hospital"
+  }
+  ```
+- Click **Execute**.
+- **Expected Result**: Returns HTTP `200 OK` with created trip details (e.g. `"id": 1`) and generated `notifications` array matching signal police officers along that corridor.
+
+#### 3. `GET /api/ambulance/trips/active`
+- Click **Try it out** ➔ **Execute**.
+- **Expected Result**: Returns the active trip currently in progress for `ambulance1`.
+
+#### 4. `GET /api/ambulance/trips/{id}`
+- Set `id`: `1` ➔ Click **Execute**.
+- **Expected Result**: Returns detailed trip information and real-time status of each signal junction.
+
+---
+
+### Step 3: Login as Police Officer & Clear Signal Junction
+
+1. Click **Authorize** at the top right of Swagger ➔ Click **Logout** to clear the previous token.
+2. Expand **`POST /api/auth/login`**.
+3. Paste request body for Police Officer 1:
+   ```json
+   {
+     "username": "police1",
+     "password": "Password123!"
+   }
+   ```
+4. Click **Execute** and copy the new JWT `"token"`.
+5. Click **Authorize** 🔓, type `Bearer YOUR_POLICE_TOKEN`, and click **Authorize**.
+
+#### 1. `GET /api/police/notifications`
+- Click **Try it out** ➔ **Execute**.
+- **Expected Result**: Returns active notification list for Officer 1 at `Central Hospital & Main Rd Junction` with `"status": "Pending"`. Note the notification `"id"` (e.g. `1`).
+
+#### 2. `PUT /api/police/notifications/{id}/status` (Mark Junction Cleared)
+- Set `id`: `1`
+- Paste request body:
+  ```json
+  {
+    "status": "Cleared"
+  }
+  ```
+- Click **Execute**.
+- **Expected Result**: Returns updated notification object with `"status": "Cleared"`.
+
+#### 3. `PUT /api/police/notifications/{id}/status` (Mark Ambulance Passed)
+- Set `id`: `1`
+- Paste request body:
+  ```json
+  {
+    "status": "Passed"
+  }
+  ```
+- Click **Execute**.
+- **Expected Result**: Status updates to `"Passed"`, restoring standard signal operation.
+
+---
+
+### Step 4: Login as System Admin & Check Control Room Stats
+
+1. Click **Authorize** ➔ **Logout**.
+2. Perform `POST /api/auth/login` with Admin credentials:
+   ```json
+   {
+     "username": "admin",
+     "password": "Password123!"
+   }
+   ```
+3. Copy the admin JWT token and authorize via **Authorize** 🔓 (`Bearer YOUR_ADMIN_TOKEN`).
+
+#### 1. `GET /api/admin/statistics`
+- Click **Try it out** ➔ **Execute**.
+- **Expected Result**: Returns system-wide statistics (`activeTripsCount`, `clearedJunctionsCount`, `totalOfficersCount`, and `activeTrips` list).
+
+#### 2. `GET /api/admin/officers`
+- Click **Try it out** ➔ **Execute**.
+- **Expected Result**: Returns matrix of all registered traffic police officers and their assigned signal locations.
+
+---
+
+### Step 5: Test Ambulance Cancel Trip
+
+1. Re-authorize as `ambulance1` using the ambulance JWT token.
+2. `PUT /api/ambulance/trips/1/cancel`
+- Click **Try it out**, set `id`: `1` ➔ Click **Execute**.
+- **Expected Result**: Returns HTTP `200 OK` with message `"Trip cancelled successfully."`.
+
+---
+
+## ⚡ Real-Time SignalR WebSockets Hub Specification (`ws://localhost:5000/notificationHub`)
+
+- **Connection URL**: `http://localhost:5000/notificationHub?access_token=YOUR_JWT_TOKEN`
+- **SignalR Client Events**:
+  - `ReceiveEmergencyNotification`: Payload includes `NotificationResponse` when ambulance starts trip.
+  - `NotificationStatusUpdated`: Payload includes updated `NotificationResponse` when status changes (`Pending` ➔ `Cleared` ➔ `Passed`).
+  - `TripCancelled`: Payload includes `emergencyTripId` when trip is cancelled.

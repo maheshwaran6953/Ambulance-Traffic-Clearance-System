@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #006398;
+  cursor: pointer;
+}
+
+.toggle:checked + .track {
+  background-color: #006398;
+}
+
+.toggle:checked + .track .dot {
+  transform: translateX(20px);
+  background: #ffffff;
+}

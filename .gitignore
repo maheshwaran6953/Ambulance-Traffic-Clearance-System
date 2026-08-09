@@ -1,0 +1,30 @@
+# .gitignore for ASP.NET Core & Node.js React
+
+# Build & Binaries
+**/bin/
+**/obj/
+**/out/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Node & Frontend
+**/node_modules/
+**/dist/
+**/build/
+.npm
+*.log
+
+# IDE & Editor
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Docker
+.docker/
+
+# AntiGravity artifacts / scratch
+.gemini/
